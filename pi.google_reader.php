@@ -14,8 +14,8 @@ $plugin_info = array( 'pi_name'        => 'Google Reader',
  * @package			ExpressionEngine
  * @category		Plugin
  * @author  		Curtis Herbert <me@forgottenexpanse.com>
- * @url 			http://forgottenexpanse.com/projects/code/ee_reader/
- * @version 		1.0 (2009-12-22)
+ * @url 			http://www.consumedbycode.com/code/ee_google_reader
+ * @version 		1.0.1 (2010-10-25)
  */
 class Google_reader 
 {
@@ -25,7 +25,7 @@ class Google_reader
 	//urls needed to interact with google
 	var $login_url 			= 	'https://www.google.com/accounts/ClientLogin';
 	var $feed_url 			= 	'http://www.google.com/reader/atom/';
-	var $token_url			=	'http://www.google.com/reader/api/0/token';
+	var $token_url			=	'https://www.google.com/accounts/ClientLogin';
 	var $source		 		= 	'Google Reader API for Expression Engine';
 
 	//states for items
@@ -34,7 +34,6 @@ class Google_reader
 	var $reading_state		= 	'user/-/state/com.google/reading-list';
 	
 	//internal variables
-	var $_cookie;
 	var $_channel;
 	var $_token;
 	var $_cache_name		= 	'google_reader';
@@ -237,7 +236,7 @@ class Google_reader
 	 * @return 	TRUE/FALSE based on success of loggin in
 	 */
 	function _login() {
-		if (isset($this->_cookie)) 
+		if (isset($this->_token)) 
 		{
 			return TRUE;
 		}
@@ -251,6 +250,7 @@ class Google_reader
 		$post_data['Email'] = $this->_email;
 		$post_data['Passwd'] = $this->_password;
 		$post_data['continue'] = 'http://www.google.com/';
+		$post_data['accountType'] = 'HOSTED_OR_GOOGLE';
 		$post_data['source'] = $this->source;
 		$post_data['service'] = 'reader';
 		
@@ -262,50 +262,14 @@ class Google_reader
 		$result = curl_exec($this->_channel);
 		curl_close($this->_channel);
 		
-		if (strpos($result, "SID=") === FALSE) 
-		{
-			throw new Exception('User credentials provided were not valid');
-		}
-		
-		if ($i = strstr($result, "LSID")) 
-		{
-  			$sid = substr($result, 0, (strlen($result) - strlen($i)));
-  			$sid = rtrim(substr($sid, 4, (strlen($sid) - 4)));
-  			
-  			$this->_cookie = 'SID=' . $sid . '; domain=.google.com; path=/; expires=1600000000';
-  			return TRUE;
-		}
-		else 
-		{
-			unset($this->_cookie);
-			return FALSE;
-		}
-	}
-	
-	/**
-	 * Gets a token from google to allow editing of data.  This function requires a
-	 * logged in user.
-	 * 
-	 * @access 	private
-	 * @return 	TRUE/FALSE based on success of getting token
-	 */
-	function _load_token() 
-	{
-		if (!isset($this->_token)) 
-		{
-			if (isset($this->_cookie)) 
-			{
-				$token = $this->_fetch($this->token_url);
-				if (strpos($token, 'access') !== FALSE) 
-				{
-					throw new Exception('Unable to get token from google');
-				}
-				
-				$this->_token = $token;
-				return TRUE;	
-			}
-			
-			throw new Exception('User must be logged in to get a token');
+		if (strpos($result, 'BadAuthentication') !== FALSE) {
+			throw new Exception('User credentials were rejected by Google');
+		} else if (strpos($result, 'Auth') === FALSE) {
+			throw new Exception('Unable to get token from google');
+		} else {
+			$token_start = strpos($result, 'Auth=');
+			$this->_token = substr($result, $token_start + 5);
+			return TRUE;
 		}
 	}
 	
@@ -368,7 +332,7 @@ class Google_reader
 	}
 	
 	/**
-	 * Fetches a URL.  Will use the cookie for login if it is set.
+	 * Fetches a URL.  Will use the token for login if it is set.
 	 * 
 	 * @access 	private
 	 * @param 	string $url URL to fetch
@@ -382,9 +346,8 @@ class Google_reader
 			$this->_channel = curl_init($url);
 			curl_setopt($this->_channel, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($this->_channel, CURLOPT_FOLLOWLOCATION, TRUE);
-			if (isset($this->_cookie))
-			{
-				curl_setopt($this->_channel, CURLOPT_COOKIE, $this->_cookie);
+			if ($this->_token != NULL) {
+				curl_setopt($this->_channel, CURLOPT_HTTPHEADER, array('Authorization:GoogleLogin auth=' . $this->_token));
 			}
 			if (!is_null($post))
 			{
@@ -585,6 +548,8 @@ class Google_reader
 		***************************
 		Change Log
 		***************************
+		Version 1.0.1 (2010-10-25):
+			- Updated to use new authentication method
 		
 		Version 1.0 (2009-12-22):
 			- Initial release

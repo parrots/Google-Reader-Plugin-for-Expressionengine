@@ -6,7 +6,7 @@ The Google Reader plugin allows you to display your shared, starred, and unread 
 
 This plugin requires that you have an account with google reader.
 
-##Using the Plugin Ñ Parameters
+##Using the Plugin - Parameters
 The main tag for the plugin, *{exp:google_reader}*, supports a few parameters that allow you to customize the behavior:
 
 * **type**: Type of items to display. Valid values are "shared", "starred", or "all".
@@ -24,7 +24,7 @@ If you use the email/password method you have access to all feeds for a user (th
 * **email**: Email address of user to show items for.
 * **password**: Password of user to show items for.
 
-##Using the Plugin Ñ Variables
+##Using the Plugin - Variables
 **Single Variables**
 
 * **{lastupdated}**: Last updated date for the entire feed.
@@ -38,7 +38,7 @@ There is one pair variable for the plugin, *{item}*, which represents a single i
 * **{updated}**: Last updated date for the feed item.
 * **{summary}**: Summary for the feed item.
 
-##Using the Plugin Ñ Anonymous Calls
+##Using the Plugin - Anonymous Calls
 Well, more *call* than *calls*. As stated above, the only feed you can access without providing an email/password is the shared item feed. Once you've looked up your ID you can load your shared items (for the sake of example, the last 10) like this:
 
 	{exp:google_reader id='12006118737470781753' limit='10'}
@@ -50,7 +50,7 @@ Well, more *call* than *calls*. As stated above, the only feed you can access wi
 	</ul>
 	{/exp:google_reader}
 
-##Using the Plugin Ñ Logged-in Call Examples
+##Using the Plugin - Logged-in Call Examples
 Logging in to Google Reader using your email and password gives you access to feeds beyond the shared item feed Ñ specifically the starred items and all items feeds. An example call of logging in and showing your most 20 most recent starred items, including their summaries, is as follows:
 
 	{exp:google_reader email='someone@someisp.com' password='arealpassword' limit='20' type='starred'}

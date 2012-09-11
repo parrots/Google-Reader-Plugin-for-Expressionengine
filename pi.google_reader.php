@@ -4,7 +4,7 @@ if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 $plugin_info = array( 'pi_name'        => 'Google Reader',
 					  'pi_version'     => '1.0',
 					  'pi_author'      => 'Curtis Herbert',
-					  'pi_author_url'  => 'http://forgottenexpanse.com/projects/code/ee_reader/',
+					  'pi_author_url'  => 'http://www.consumedbycode.com/code/ee_google_reader',
 					  'pi_description' => 'Allows you to display your google starred, shared, and unreal items',
 					  'pi_usage'       => Google_reader::usage() );
 
@@ -13,9 +13,9 @@ $plugin_info = array( 'pi_name'        => 'Google Reader',
  *
  * @package			ExpressionEngine
  * @category		Plugin
- * @author  		Curtis Herbert <me@forgottenexpanse.com>
+ * @author  		Curtis Herbert <me@curtisherbert.com>
  * @url 			http://www.consumedbycode.com/code/ee_google_reader
- * @version 		1.0.1 (2010-10-25)
+ * @version 		1.0.2 (2012-09-10)
  */
 class Google_reader 
 {
@@ -27,6 +27,7 @@ class Google_reader
 	var $feed_url 			= 	'http://www.google.com/reader/atom/';
 	var $token_url			=	'https://www.google.com/accounts/ClientLogin';
 	var $source		 		= 	'Google Reader API for Expression Engine';
+	var $label_prefix 		=	'user/-/label/';
 
 	//states for items
 	var $starred_state 		= 	'user/-/state/com.google/starred';
@@ -70,7 +71,7 @@ class Google_reader
 					$this->return_data = $this->_starred_items();
 					break;
 				default:
-					throw new Exception('Invalid stream type ' . $this->_type);
+					$this->return_data = $this->_labeled_items($this->_type);
 					break;
 			}		
 			
@@ -154,6 +155,20 @@ class Google_reader
  	}
  		
 	/**
+	 * Fetches all the items in a logged in user's stream that are tagged with the given label,
+	 * and returns a formatted text string of those items using the tags in the template.
+	 * 
+	 * @access 	private
+	 * @return 	string of formatted items from the feed
+	 */
+	function _labeled_items($label) 
+	{
+		$feed_xml = $this->_labeled_items_raw($label);
+		$labeled_result = $this->_parse_items($feed_xml);
+		return $this->_parse_template($labeled_result);
+	}
+
+	/**
 	 * The XML of all items for the logged in user.
 	 * 
 	 * @access 	private
@@ -208,6 +223,27 @@ class Google_reader
 		}
 		
 		return $this->_fetch($this->feed_url . $this->starred_state);
+	}
+
+	/**
+	 * The XML of labeled items for the logged in user.
+	 *
+	 * @access 	private
+	 * @param 	string $label the label to get the items for
+	 * @return 	string of raw XML returned from the items feed
+	 */
+	function _labeled_items_raw($label = NULL) 
+	{
+		if (is_null($label)) {
+			throw new Exception('Must provide label to query feed for');
+		}
+
+		if ($this->_login() === FALSE) 
+		{
+			throw new Exception('Either email/password or id must be provided to access shared items');
+		}
+		
+		return $this->_fetch($this->feed_url . $this->label_prefix . $label);
 	}
 	
 	/**
@@ -509,7 +545,7 @@ class Google_reader
 		Parameters
 		***************************	
 		
-		type:		Type of items to display. Valid values are "shared", "starred", or "all".
+		type:		Type of items to display. Valid values are "shared", "starred", "all", or any used label/tag in the user's account.
 		
 		limit:		Maximum number of items to display. Default is 20.
 			
@@ -548,6 +584,9 @@ class Google_reader
 		***************************
 		Change Log
 		***************************
+		Version 1.0.2 (2012-09-12):
+			- Updated to add support for user's tags
+
 		Version 1.0.1 (2010-10-25):
 			- Updated to use new authentication method
 		

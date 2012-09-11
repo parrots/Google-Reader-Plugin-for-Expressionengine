@@ -9,7 +9,7 @@ This plugin requires that you have an account with google reader.
 ##Using the Plugin - Parameters
 The main tag for the plugin, *{exp:google_reader}*, supports a few parameters that allow you to customize the behavior:
 
-* **type**: Type of items to display. Valid values are "shared", "starred", or "all".
+* **type**: Type of items to display. Valid values are "shared", "starred", "all", or any used label/tag in the user's account.
 * **limit**: Maximum number of items to display. Default is 20.
 * **refresh**: How long (in minutes) to cache responses before checking for updates. Default is 15 minutes.
 
@@ -51,7 +51,7 @@ Well, more *call* than *calls*. As stated above, the only feed you can access wi
 	{/exp:google_reader}
 
 ##Using the Plugin - Logged-in Call Examples
-Logging in to Google Reader using your email and password gives you access to feeds beyond the shared item feed Ñ specifically the starred items and all items feeds. An example call of logging in and showing your most 20 most recent starred items, including their summaries, is as follows:
+Logging in to Google Reader using your email and password gives you access to feeds beyond the shared item feed â€” specifically the starred items and all items feeds. An example call of logging in and showing your most 20 most recent starred items, including their summaries, is as follows:
 
 	{exp:google_reader email='someone@someisp.com' password='arealpassword' limit='20' type='starred'}
 	<div class="date">Updated on {lastupdated format="%F %d, %Y"}</div>
